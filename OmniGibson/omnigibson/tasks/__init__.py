@@ -3,6 +3,7 @@ from omnigibson.tasks.dummy_task import DummyTask
 from omnigibson.tasks.grasp_task import GraspTask
 from omnigibson.tasks.point_navigation_task import PointNavigationTask
 from omnigibson.tasks.point_reaching_task import PointReachingTask
+from omnigibson.tasks.object_navigation_task import ObjectNavigationTask
 from omnigibson.tasks.task_base import REGISTERED_TASKS
 
 __all__ = [
@@ -11,5 +12,6 @@ __all__ = [
     "GraspTask",
     "PointNavigationTask",
     "PointReachingTask",
+    "ObjectNavigationTask",
     "REGISTERED_TASKS",
 ]
