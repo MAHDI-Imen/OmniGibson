@@ -4,7 +4,6 @@ on:
   pull_request: 
   push: 
     branches: 
-      - og-develop
       - main
 
 concurrency:
@@ -21,6 +20,7 @@ jobs:
       matrix:
         test_file:
           - test_controllers
+          - test_curobo
           - test_data_collection
           - test_dump_load_states
           - test_envs
@@ -41,41 +41,33 @@ jobs:
     defaults:
       run:
         shell: micromamba run -n omnigibson /bin/bash -leo pipefail {0}
+        working-directory: ${{ github.workspace }}/OmniGibson
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: true
-          path: omnigibson-src
 
-      # These are temporarily disabled due to some errors they cause where some
-      # unknown important dependency has its version changed and Isaac Sim will
-      # no longer launch properly. The result is that if dependencies change,
-      # the tests will stop working. This is a temporary fix until we can figure
-      # out how to fix this issue.
+      - name: Install BDDL
+        run: pip install -e .
+        working-directory: ${{ github.workspace }}/bddl
 
-      # - name: Install dev requirements
-      #   working-directory: omnigibson-src
-      #   run: pip install -r requirements-dev.txt
-
-      # - name: Install
-      #   working-directory: omnigibson-src
-      #   run: pip install -e .
+      - name: Install OmniGibson
+        run: pip install -e .[dev,primitives,eval] --no-build-isolation
 
       - name: Print env
         run: printenv
 
       - name: Run tests
-        working-directory: omnigibson-src
-        run: pytest -s tests/${{ matrix.test_file }}.py --junitxml=${{ matrix.test_file }}.xml && cp ${{ matrix.test_file }}.xml ${GITHUB_WORKSPACE}/
+        run: pytest -s tests/${{ matrix.test_file }}.py --junitxml=${{ matrix.test_file }}.xml
         continue-on-error: true
 
       - name: Deploy artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.run_id }}-tests-${{ matrix.test_file }}
-          path: ${{ matrix.test_file }}.xml
+          path: OmniGibson/${{ matrix.test_file }}.xml
 
       - name: Check for failures, errors, or missing XML
         run: |
@@ -103,17 +95,18 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
-          path: omnigibson-src
+          path: behavior1k-src
       - name: Pull reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          path: omnigibson-src
+          path: behavior1k-src/OmniGibson
+          merge-multiple: true
       - name: Test Report0
         uses: dorny/test-reporter@v1
         with:
           name: Test Results
-          working-directory: omnigibson-src
-          path: ${{ github.run_id }}-tests-*/test_*.xml
+          working-directory: behavior1k-src/OmniGibson
+          path: test_*.xml
           reporter: java-junit
           fail-on-error: 'false'
           fail-on-empty: 'false'

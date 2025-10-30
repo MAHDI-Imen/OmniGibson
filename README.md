@@ -1,54 +1,122 @@
-![splash](./docs/assets/splash.png)
+<h1 align="center">BEHAVIOR-1K</h1>
 
-# <h1><img height="40" src="./docs/assets/OmniGibson_logo.png" style="float:left;padding-right:10px"> OmniGibson</h1>
-[![Tests](https://github.com/StanfordVL/OmniGibson/actions/workflows/tests.yml/badge.svg?branch=main&event=push)](https://github.com/StanfordVL/OmniGibson/actions/workflows/tests.yml)
-[![Docker Image Version (latest by date)](https://img.shields.io/docker/v/stanfordvl/omnigibson?label=docker&sort=semver)](https://hub.docker.com/r/stanfordvl/omnigibson)
-[![Realtime Speed](https://behavior.stanford.edu/knowledgebase/profile/badge.svg)](https://stanfordvl.github.io/OmniGibson/profiling/)
+![BEHAVIOR-1K](./docs/assets/readme_splash_logo.png)
 
--------
+**BEHAVIOR-1K** is a comprehensive simulation benchmark for testing embodied AI agents on 1,000 everyday household activities. This monolithic repository provides everything needed to train and evaluate agents on human-centered tasks like cleaning, cooking, and organizing — activities selected from real human time-use surveys and preference studies.
 
-### Need support? Join our Discord!
-<a href="https://discord.gg/bccR5vGFEx"><img src="https://discordapp.com/api/guilds/1166422812160966707/widget.png?style=banner3"></a>
+***Check out our [main website](https://behavior.stanford.edu/) for more details!***
 
--------
+# 🛠️ Installation
 
-### Latest Updates
-- [10/01/24] **v1.1.0**: Major improvements, stability fixes, pip installation, and much more! [[release notes]](https://github.com/StanfordVL/OmniGibson/releases/tag/v1.1.0)
+BEHAVIOR-1K provides an installation script that handles all dependencies and components. The script supports modular installation, allowing you to install only the components you need.
 
-- [03/17/24] **v1.0.0**: First full release with 1,004 pre-sampled tasks, all 50 scenes, and many new objects! [[release notes]](https://github.com/StanfordVL/OmniGibson/releases/tag/v1.0.0)
+## System Requirements
 
-- [08/04/23] **v0.2.0**: More assets! 600 pre-sampled tasks, 7 new scenes, and many new objects 📈 [[release notes]](https://github.com/StanfordVL/OmniGibson/releases/tag/v0.2.0)
+- **OS**: Linux (Ubuntu 20.04+), Windows 10+
+- **RAM**: 32GB+ recommended
+- **VRAM**: 8GB+
+- **GPU**: NVIDIA RTX 2080+
 
-- [04/10/23] **v0.1.0**: Significantly improved stability, performance, and ease of installation :wrench: [[release notes]](https://github.com/StanfordVL/OmniGibson/releases/tag/v0.1.0)
+## Quick Start
 
--------
+For most users, we recommend installing the latest stable release (v3.7.1) with all components:
 
-**`OmniGibson`** is a platform for accelerating Embodied AI research built upon NVIDIA's [Omniverse](https://www.nvidia.com/en-us/omniverse/) platform, featuring:
+### Linux
+```bash
+# Clone the latest stable release (recommended)
+git clone -b v3.7.1 https://github.com/StanfordVL/BEHAVIOR-1K.git
+cd BEHAVIOR-1K
 
-* 📸 Photorealistic Visuals and 📐 Physical Realism
-* 🌊 Fluid and 👕 Soft Body Support
-* 🏔️ Large-Scale, High-Quality Scenes and 🎾 Objects
-* 🌡️ Dynamic Kinematic and Semantic Object States
-* 🤖 Mobile Manipulator Robots with Modular ⚙️ Controllers
-* 🌎 OpenAI Gym Interface
-
-Check out [**`OmniGibson`**'s documentation](https://behavior.stanford.edu/omnigibson/getting_started/installation.html) to get started!
-
-### Citation
-If you use **`OmniGibson`** or its assets and models, please cite:
-
+# Run the setup script
+./setup.sh --new-env --omnigibson --bddl --joylo --dataset
 ```
-@inproceedings{
-li2022behavior,
-title={{BEHAVIOR}-1K: A Benchmark for Embodied {AI} with 1,000 Everyday Activities and Realistic Simulation},
-author={Chengshu Li and Ruohan Zhang and Josiah Wong and Cem Gokmen and Sanjana Srivastava and Roberto Mart{\'\i}n-Mart{\'\i}n and Chen Wang and Gabrael Levine and Michael Lingelbach and Jiankai Sun and Mona Anvari and Minjune Hwang and Manasi Sharma and Arman Aydin and Dhruva Bansal and Samuel Hunter and Kyu-Young Kim and Alan Lou and Caleb R Matthews and Ivan Villa-Renteria and Jerry Huayang Tang and Claire Tang and Fei Xia and Silvio Savarese and Hyowon Gweon and Karen Liu and Jiajun Wu and Li Fei-Fei},
-booktitle={6th Annual Conference on Robot Learning},
-year={2022},
-url={https://openreview.net/forum?id=_8DoIe8G3t}
+
+### Windows
+```powershell
+# Clone the latest stable release (recommended)
+git clone -b v3.7.1 https://github.com/StanfordVL/BEHAVIOR-1K.git
+cd BEHAVIOR-1K
+
+# Run the setup script
+.\setup.ps1 -NewEnv -OmniGibson -BDDL -JoyLo -Dataset
+```
+
+> **Development Branch**: If you want the latest development features (potentially less stable), clone the main branch instead:
+> ```bash
+> git clone https://github.com/StanfordVL/BEHAVIOR-1K.git
+> ```
+
+> **Note**: Run PowerShell as Administrator and set execution policy if needed: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+
+## Installation Options
+
+### Available Components
+
+| Component | Flag | Description |
+|-----------|------|-------------|
+| **OmniGibson** | `--omnigibson` | Core physics simulator and robotics environment |
+| **BDDL** | `--bddl` | Behavior Domain Definition Language for task specification |
+| **JoyLo** | `--joylo` | JoyLo interface for robot teleoperation |
+
+### Additional Options
+
+| Option | Flag | Description |
+|--------|------|-------------|
+| **New Environment** | `--new-env` | Create a new conda environment named `behavior` (requires conda) |
+| **Datasets** | `--dataset` | Download BEHAVIOR datasets (requires `--omnigibson`) |
+| **Primitives** | `--primitives` | Install OmniGibson with action primitives support |
+| **Eval** | `--eval` | Install evaluation support for OmniGibson |
+| **Development** | `--dev` | Install development dependencies |
+| **CUDA Version** | `--cuda-version X.X` | Specify CUDA version (default: 12.4) |
+| **No Conda Confirmation** | `--confirm-no-conda` | Skip confirmation prompt when not in a conda environment |
+
+### Installation without Conda
+
+If you prefer to use your existing Python environment (system Python, venv, etc.) instead of conda, simply omit the `--new-env` flag:
+
+```bash
+# Linux
+./setup.sh --omnigibson --bddl --joylo --dataset
+
+# Windows
+.\setup.ps1 -OmniGibson -BDDL -JoyLo -Dataset
+```
+
+If you're not in a conda environment, the script will prompt for confirmation. To skip this prompt (useful for CI/CD):
+
+```bash
+./setup.sh --omnigibson --bddl --joylo --dataset --confirm-no-conda
+```
+
+### Terms of Service & License Acceptance
+
+BEHAVIOR-1K installation may require acceptance of various terms of service and license agreements. For interactive installation, you'll be prompted to accept these terms. For non-interactive/automated installation, use these flags:
+
+| Option | Flag | Description |
+|--------|------|-------------|
+| **Conda TOS** | `--accept-conda-tos` | Automatically accept Anaconda Terms of Service |
+| **NVIDIA EULA** | `--accept-nvidia-eula` | Automatically accept NVIDIA Isaac Sim End User License Agreement |
+| **Dataset License** | `--accept-dataset-tos` | Automatically accept BEHAVIOR Data Bundle License Agreement |
+
+For automated/CI environments, you can bypass all prompts:
+
+```bash
+./setup.sh --new-env --omnigibson --bddl --joylo --dataset \
+           --accept-conda-tos --accept-nvidia-eula --accept-dataset-tos
+```
+
+To see all available options:
+```bash
+./setup.sh --help
+```
+
+## 📄 Citation
+
+```bibtex
+@article{li2024behavior1k,
+    title   = {BEHAVIOR-1K: A Human-Centered, Embodied AI Benchmark with 1,000 Everyday Activities and Realistic Simulation},
+    author  = {Chengshu Li and Ruohan Zhang and Josiah Wong and Cem Gokmen and Sanjana Srivastava and Roberto Martín-Martín and Chen Wang and Gabrael Levine and Wensi Ai and Benjamin Martinez and Hang Yin and Michael Lingelbach and Minjune Hwang and Ayano Hiranaka and Sujay Garlanka and Arman Aydin and Sharon Lee and Jiankai Sun and Mona Anvari and Manasi Sharma and Dhruva Bansal and Samuel Hunter and Kyu-Young Kim and Alan Lou and Caleb R Matthews and Ivan Villa-Renteria and Jerry Huayang Tang and Claire Tang and Fei Xia and Yunzhu Li and Silvio Savarese and Hyowon Gweon and C. Karen Liu and Jiajun Wu and Li Fei-Fei},
+    journal = {arXiv preprint arXiv:2403.09227},
+    year    = {2024}
 }
 ```
-
-### Profiling
-Click on the plot to access our profiling page with more examples.
-
-[![Profiling](https://behavior.stanford.edu/knowledgebase/profile/plot.png)](https://stanfordvl.github.io/OmniGibson/profiling/)

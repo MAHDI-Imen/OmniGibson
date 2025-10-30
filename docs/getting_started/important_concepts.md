@@ -1,8 +1,4 @@
----
-icon: material/lightbulb
----
-
-# **Important Concepts**
+# :material-lightbulb: **Important Concepts**
 
 In this document, we discuss and disambiguate a number of concepts that are central to working with OmniGibson and BEHAVIOR-1K.
 
