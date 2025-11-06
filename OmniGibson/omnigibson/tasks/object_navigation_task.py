@@ -1,4 +1,5 @@
 import math
+import random
 import torch as th
 
 import omnigibson as og
@@ -17,6 +18,8 @@ from omnigibson.termination_conditions.timeout import Timeout
 from omnigibson.utils.python_utils import assert_valid_key, classproperty
 from omnigibson.utils.sim_utils import land_object, test_valid_pose
 from omnigibson.utils.ui_utils import create_module_logger
+from omnigibson.objects import DatasetObject
+from omnigibson.utils.object_state_utils import sample_kinematics
 
 # Create module logger
 log = create_module_logger(module_name=__name__)
@@ -25,7 +28,10 @@ log = create_module_logger(module_name=__name__)
 class ObjectNavigationTask(BaseTask):
     def __init__(
         self,
-        goal_object_category,
+        target_object_category,
+        parent_object_category=None,
+        predicate=None,
+        room_category=None,
         robot_idn=0,
         floor=0,
         initial_pos=None,
@@ -47,7 +53,12 @@ class ObjectNavigationTask(BaseTask):
         )
         self._randomize_initial_pos = initial_pos is None
         self._randomize_initial_quat = initial_quat is None
-        self._goal_object_category = goal_object_category
+
+        self._target_object_category = target_object_category
+        self._parent_object_category = parent_object_category
+        self._predicate = predicate
+        self._room_category = room_category
+
         self._goal_tolerance = goal_tolerance
         self._goal_in_polar = goal_in_polar
         self._path_range = path_range
@@ -102,19 +113,83 @@ class ObjectNavigationTask(BaseTask):
         return rewards
 
     def _load(self, env):
-        self.goal_objects = [
-            o
-            for o in env.scene.object_registry.objects
-            if o.category == self._goal_object_category
-        ]
-        assert len(self.goal_objects), "The scene does not contain the goal category"
-        # Auto-initialize all markers
         og.sim.play()
+        self._reset_objects(env=env)
         self._reset_agent(env=env)
         env.scene.update_initial_file()
         og.sim.stop()
 
-    # TODO: add load_visualization_markers
+    def _reset_objects(self, env):
+        if self._room_category is not None:
+            possible_rooms = env.scene.seg_map.room_sem_name_to_ins_name.get(
+                self._room_category, []
+            )
+            assert possible_rooms, "Room category does not exist in current scene."
+        else:
+            possible_rooms = list(env.scene.seg_map.room_ins_id_to_ins_name.values())
+
+        if self._parent_object_category is not None:
+            assert (
+                self._predicate is not None
+            ), "If parent object is specified, the category must be also specified"
+            parent_objects = [
+                o
+                for o in env.scene.object_registry.objects
+                if o.category == self._parent_object_category
+                and (set(o.in_rooms) & set(possible_rooms))
+            ]
+
+            if parent_objects:
+                parent_object = random.choice(parent_objects)
+            else:
+                og.sim.stop()
+                parent_object = DatasetObject(
+                    name=f"{self._parent_object_category}_parent",
+                    category=self._parent_object_category,
+                    in_rooms=[random.choice(possible_rooms)],
+                )
+                env.scene.add_object(parent_object)
+                og.sim.play()
+        else:
+            parent_object = None
+
+        target_objects = env.scene.object_registry(
+            "category", self._target_object_category
+        )
+        if target_objects is not None:
+            target_objects = list(target_objects)
+            assert (
+                len(target_objects) < 2 or parent_object is None
+            ), "If many target objects exist, parent object cannot be set."
+            self.goal_objects = target_objects
+            if len(target_objects) == 1:
+                target_object = target_objects[0]
+
+        else:
+            if parent_object is not None:
+                target_room = parent_object.in_rooms[0]
+            else:
+                target_room = random.choice(possible_rooms)
+            og.sim.stop()
+            target_object = DatasetObject(
+                name=f"{self._target_object_category}_target",
+                category=self._target_object_category,
+                in_rooms=[target_room],
+            )
+            env.scene.add_object(target_object)
+            og.sim.play()
+            self.goal_objects = [target_object]
+
+        if parent_object is not None:
+            success = sample_kinematics(
+                self._predicate,
+                target_object,
+                parent_object,
+                max_trials=100,
+            )
+            assert (
+                success
+            ), "Could not sample the target object in the parent object with the specified predicate"
 
     def _sample_initial_pose(self, env, max_trials=100):
         """
@@ -183,7 +258,6 @@ class ObjectNavigationTask(BaseTask):
             float: L2 distance to the closest target position
         """
         min_dist = float("inf")
-        closest_goal = ""
         for goal_pos in self.get_goal_pos(env):
             dist = T.l2_distance(
                 env.robots[self._robot_idn].states[Pose].get_value()[0][:2],
